@@ -38,3 +38,5 @@ Danach in Cloudflare (Workers & Pages → Create → Import a repository) das Re
 
 Jeder Spieler hat einen persönlichen Magic-Link: `https://<worker-url>/?t=<token>`.
 Die Tokens stehen in `schema.sql` (Tabelle `players`). Stefan D. ist Admin.
+
+Stand: 07.10.2026

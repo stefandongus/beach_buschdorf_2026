@@ -1,0 +1,12 @@
+name = "beach-buschdorf"
+main = "worker/index.js"
+compatibility_date = "2026-09-16"
+
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "buschdorf-db"
+database_id = "99f18e51-4e20-4535-bfff-cb410b1597c5"

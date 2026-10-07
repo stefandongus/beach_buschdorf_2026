@@ -1,4 +1,4 @@
-const CACHE = "buschdorf-v1";
+const CACHE = "buschdorf-v2";
 const SHELL = ["/", "/style.css", "/app.js", "/manifest.json"];
 
 self.addEventListener("install", (event) => {

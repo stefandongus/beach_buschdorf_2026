@@ -409,7 +409,7 @@ async function renderAdmin() {
           <tr>
             <td>${s.name}</td>
             <td><input type="number" min="0" value="${s.plan}" data-player-idx="${i}"></td>
-            <td>${s.ist}</td>
+            <td class="ist-cell" data-ist-idx="${i}">${s.ist}</td>
           </tr>`
           )
           .join("")}
@@ -418,13 +418,7 @@ async function renderAdmin() {
 
     <div class="admin-section">
       <h3>Verlauf</h3>
-      <div class="verlauf-list">
-        ${
-          activityData.error || !activityData.activity || activityData.activity.length === 0
-            ? `<p class="loading">Noch keine Einträge.</p>`
-            : activityData.activity.map(verlaufItemHtml).join("")
-        }
-      </div>
+      <div class="verlauf-list" id="verlauf-list">${verlaufListInnerHtml(activityData)}</div>
     </div>
 
     <div class="admin-section">
@@ -499,18 +493,46 @@ function wireTerminCard(card, s) {
 
 // Lädt nur die Daten EINES Termins neu und tauscht nur dessen Karte aus —
 // keine komplette Seiten-Neuladung, also auch kein Scroll-Sprung.
+// Zusätzlich werden die Ist-Werte (Plan/Ist) und der Verlauf oben aktualisiert, damit sie
+// nach jeder Aktion stimmen. Wächst der Verlauf, rutscht die Karte nach unten — das gleichen
+// wir per Scroll-Korrektur aus, damit der Termin an derselben Stelle auf dem Bildschirm bleibt.
 async function refreshTerminCard(sessionId) {
-  const data = await api("/api/admin/sessions");
+  const [data, statsData, activityData] = await Promise.all([
+    api("/api/admin/sessions"),
+    api("/api/stats"),
+    api("/api/admin/activity"),
+  ]);
   if (data.error) return;
   const s = data.sessions.find((x) => x.id === sessionId);
   if (!s) return;
   const oldCard = document.querySelector(`.admin-termin[data-session-id="${sessionId}"]`);
   if (!oldCard) return;
+  const topBefore = oldCard.getBoundingClientRect().top;
+
   const wrapper = document.createElement("div");
   wrapper.innerHTML = adminTerminHtml(s).trim();
   const newCard = wrapper.firstElementChild;
   oldCard.replaceWith(newCard);
   wireTerminCard(newCard, s);
+
+  if (statsData.stats) {
+    statsData.stats.forEach((st, i) => {
+      const cell = document.querySelector(`.ist-cell[data-ist-idx="${i}"]`);
+      if (cell) cell.textContent = st.ist;
+    });
+  }
+  const verlauf = document.getElementById("verlauf-list");
+  if (verlauf) verlauf.innerHTML = verlaufListInnerHtml(activityData);
+
+  const topAfter = newCard.getBoundingClientRect().top;
+  if (topAfter !== topBefore) window.scrollBy(0, topAfter - topBefore);
+}
+
+function verlaufListInnerHtml(activityData) {
+  if (activityData.error || !activityData.activity || activityData.activity.length === 0) {
+    return `<p class="loading">Noch keine Einträge.</p>`;
+  }
+  return activityData.activity.map(verlaufItemHtml).join("");
 }
 
 function verlaufItemHtml(item) {
